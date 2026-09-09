@@ -1,0 +1,42 @@
+{
+    "name": "radioapi/php",
+    "description": "A small PHP client for the RadioAPI Management, Now Playing, and Stream Router APIs.",
+    "keywords": [
+        "radio",
+        "radioapi",
+        "now-playing",
+        "stream-router",
+        "sdk"
+    ],
+    "homepage": "https://github.com/RadioAPI/RadioAPI",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "RadioAPI"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "guzzlehttp/guzzle": "^7.9"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "RadioApi\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "RadioApi\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

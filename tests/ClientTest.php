@@ -34,6 +34,68 @@ final class ClientTest extends TestCase
         ], json_decode((string) $request->getBody(), true, 512, JSON_THROW_ON_ERROR));
     }
 
+    public function test_it_creates_a_station_with_the_fluent_builder(): void
+    {
+        $transport = new FakeTransport([
+            new Response(201, [], json_encode(['data' => ['uuid' => 'station-uuid']], JSON_THROW_ON_ERROR)),
+        ]);
+        $client = new Client('https://radio.example', 'radio_live_secret', httpClient: $transport);
+
+        $client->stations()->builder()
+            ->name('Chillwave')
+            ->streamUrl('https://stream.example/live')
+            ->streamMetadataProvider('azuracast')
+            ->streamMetadataUrl('https://station.example/nowplaying')
+            ->streamMetadataGenre('Electronic')
+            ->language('fr')
+            ->musicProvider('auto')
+            ->nowPlayingAccess('public')
+            ->nowPlayingHistoryEnabled()
+            ->slug('chillwave')
+            ->create();
+
+        self::assertSame([
+            'name' => 'Chillwave',
+            'stream_url' => 'https://stream.example/live',
+            'stream_metadata_provider' => 'azuracast',
+            'stream_metadata_settings' => [
+                'url' => 'https://station.example/nowplaying',
+                'genre' => 'Electronic',
+                'language' => 'fr',
+            ],
+            'music_provider' => 'auto',
+            'nowplaying_access' => 'public',
+            'nowplaying_history_enabled' => true,
+            'slug' => 'chillwave',
+        ], json_decode((string) $transport->requests[0]['request']->getBody(), true, 512, JSON_THROW_ON_ERROR));
+    }
+
+    public function test_it_lists_stations_with_a_fluent_query(): void
+    {
+        $transport = new FakeTransport([
+            new Response(200, [], json_encode([
+                'data' => [],
+                'links' => [],
+                'meta' => [],
+            ], JSON_THROW_ON_ERROR)),
+        ]);
+        $client = new Client('https://radio.example', 'radio_live_secret', httpClient: $transport);
+
+        $client->stations()->query()
+            ->search('chill')
+            ->provider('azuracast')
+            ->status('active')
+            ->sortBy('name')
+            ->descending()
+            ->perPage(25)
+            ->get();
+
+        self::assertSame(
+            'https://radio.example/api/v1/stations?search=chill&provider=azuracast&status=active&sort=name&direction=desc&per_page=25',
+            (string) $transport->requests[0]['request']->getUri(),
+        );
+    }
+
     public function test_it_uses_the_configured_now_playing_host_without_an_api_key(): void
     {
         $transport = new FakeTransport([
@@ -74,6 +136,26 @@ final class ClientTest extends TestCase
         self::assertSame('https://radio.example/api/v1/stream-links', (string) $transport->requests[0]['request']->getUri());
         self::assertSame('DELETE', $transport->requests[1]['request']->getMethod());
         self::assertSame('https://radio.example/api/v1/stream-links/route-uuid', (string) $transport->requests[1]['request']->getUri());
+    }
+
+    public function test_it_creates_a_stream_router_route_with_the_fluent_builder(): void
+    {
+        $transport = new FakeTransport([
+            new Response(201, [], json_encode(['data' => ['uuid' => 'route-uuid']], JSON_THROW_ON_ERROR)),
+        ]);
+        $client = new Client('https://radio.example', 'radio_live_secret', httpClient: $transport);
+
+        $client->streamRouter()->builder()
+            ->stationUuid('station-uuid')
+            ->slug('chillwave')
+            ->redirectStatusCode(307)
+            ->create();
+
+        self::assertSame([
+            'station_uuid' => 'station-uuid',
+            'slug' => 'chillwave',
+            'redirect_status_code' => 307,
+        ], json_decode((string) $transport->requests[0]['request']->getBody(), true, 512, JSON_THROW_ON_ERROR));
     }
 
     public function test_it_exposes_api_errors_with_their_status_and_code(): void

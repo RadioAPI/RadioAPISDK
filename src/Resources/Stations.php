@@ -11,6 +11,16 @@ final readonly class Stations
 {
     public function __construct(private Client $client) {}
 
+    public function builder(): StationBuilder
+    {
+        return new StationBuilder($this);
+    }
+
+    public function query(): StationQuery
+    {
+        return new StationQuery($this);
+    }
+
     /**
      * List stations for the API key's account.
      *
@@ -31,7 +41,7 @@ final readonly class Stations
     /**
      * Create a station.
      *
-     * @param  array{name: string, stream_url: string, stream_metadata_provider?: 'jcplayer'|'azuracast'|'radioking'|'live365', stream_metadata_settings?: array{url: string, genre?: string}, music_provider?: string, nowplaying_access?: 'public'|'private', nowplaying_history_enabled?: bool, slug?: string}  $attributes
+     * @param  array{name: string, stream_url: string, stream_metadata_provider?: 'jcplayer'|'azuracast'|'radioking'|'live365', stream_metadata_settings?: array{url?: string, genre?: string, language?: string}, music_provider?: string, nowplaying_access?: 'public'|'private', nowplaying_history_enabled?: bool, slug?: string}  $attributes
      * @return array<string, mixed>
      */
     public function create(array $attributes): array

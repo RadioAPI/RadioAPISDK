@@ -11,6 +11,16 @@ final readonly class StreamRouter
 {
     public function __construct(private Client $client) {}
 
+    public function builder(): StreamRouterBuilder
+    {
+        return new StreamRouterBuilder($this);
+    }
+
+    public function query(): StreamRouterQuery
+    {
+        return new StreamRouterQuery($this);
+    }
+
     /**
      * List Stream Router routes for the API key's account.
      *

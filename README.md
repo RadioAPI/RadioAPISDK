@@ -58,6 +58,7 @@ $station = $radio->stations()->create([
     'stream_metadata_settings' => [
         'url' => 'https://station.example.com/api/nowplaying/chillwave',
         'genre' => 'Electronic',
+        'language' => 'fr',
     ],
     'music_provider' => 'auto',
     'nowplaying_access' => 'public',
@@ -67,7 +68,7 @@ $station = $radio->stations()->create([
 echo $station['uuid'];
 ```
 
-The supported stream metadata providers are `jcplayer` (generic/ICY), `azuracast`, `radioking`, and `live365`. AzuraCast, RadioKing, and Live365 require `stream_metadata_settings.url`.
+The supported stream metadata providers are `jcplayer` (generic/ICY), `azuracast`, `radioking`, and `live365`. AzuraCast, RadioKing, and Live365 require `stream_metadata_settings.url`. When music enrichment is enabled, `stream_metadata_settings.language` sets the ISO 639-1 enrichment language and defaults to `en`; the API also accepts `locale` as an input alias.
 
 ```php
 $page = $radio->stations()->list([
@@ -86,6 +87,36 @@ $radio->stations()->delete('STATION_UUID');
 ```
 
 `list()` returns the API pagination object with `data`, `links`, and `meta`. `create()`, `find()`, and `update()` return the unwrapped resource from `data`.
+
+For a fluent alternative to payload arrays, use a station builder:
+
+```php
+$station = $radio->stations()->builder()
+    ->name('Chillwave Radio')
+    ->streamUrl('https://stream.example.com/live.mp3')
+    ->streamMetadataProvider('azuracast')
+    ->streamMetadataUrl('https://station.example.com/api/nowplaying/chillwave')
+    ->streamMetadataGenre('Electronic')
+    ->language('fr')
+    ->nowPlayingAccess('public')
+    ->nowPlayingHistoryEnabled()
+    ->create();
+
+$station = $radio->stations()->builder()
+    ->nowPlayingAccess('private')
+    ->update('STATION_UUID');
+```
+
+Station list filters can also be built fluently:
+
+```php
+$page = $radio->stations()->query()
+    ->status('active')
+    ->sortBy('name')
+    ->descending()
+    ->perPage(25)
+    ->get();
+```
 
 ## Now Playing
 
@@ -147,6 +178,23 @@ $radio->streamRouter()->delete('ROUTE_UUID');
 ```
 
 Use exactly one of `station_uuid` or `target_url` when creating or changing a route. Valid `redirect_status_code` values are `302` and `307`.
+
+The equivalent fluent route API is:
+
+```php
+$route = $radio->streamRouter()->builder()
+    ->stationUuid('STATION_UUID')
+    ->slug('chillwave')
+    ->redirectStatusCode(307)
+    ->create();
+
+$route = $radio->streamRouter()->builder()
+    ->targetUrl('https://cdn.example.com/chillwave.mp3')
+    ->slug('chillwave-direct')
+    ->create();
+```
+
+Calling `stationUuid()` removes a previously set `targetUrl()` and vice versa, so a builder always sends only one route destination.
 
 ## Errors
 
